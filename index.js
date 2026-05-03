@@ -4,7 +4,7 @@ const cron = require('node-cron');
 
 // ─── CONFIG ───────────────────────────────────────────────
 // Put the EXACT name of your WhatsApp group here
-const GROUP_NAME = 'YOUR GROUP NAME HERE';
+const GROUP_NAME = '@E7 8NN @52';
 // ──────────────────────────────────────────────────────────
 
 const schedule = [
