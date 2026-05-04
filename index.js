@@ -6,7 +6,7 @@ const https = require('https');
 // ─── CONFIG ──────────────────────────────────────────
 const GROUP_NAME    = '@ E7 8NN @52';
 const TELEGRAM_TOKEN   = '8339615813:AAF05U3JWBFobzeVicgdHDTwIulHiCPlJb0';
-const TELEGRAM_CHAT_ID = '-1003776230246';
+const TELEGRAM_CHAT_ID = '7502613528';
 // ─────────────────────────────────────────────────────
 
 async function sendQRToTelegram(qr) {
