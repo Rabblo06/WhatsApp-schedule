@@ -91,7 +91,9 @@ async function sendToGroup(client, message) {
 // ─── WhatsApp Client Setup ────────────────────────────────
 const client = new Client({
   authStrategy: new LocalAuth(),
-  puppeteer: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
+  puppeteer: {
+  executablePath: '/run/current-system/sw/bin/chromium',
+  args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']}
 });
 
 client.on('qr', qr => {
