@@ -1,7 +1,34 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const cron = require('node-cron');
+const QRCode = require('qrcode');
+const https = require('https');
 
-const GROUP_NAME = '@ E7 8NN @52';
+// ─── CONFIG ──────────────────────────────────────────
+const GROUP_NAME    = '@ E7 8NN @52';
+const TELEGRAM_TOKEN   = '8339615813:AAF05U3JWBFobzeVicgdHDTwIulHiCPlJb0';
+const TELEGRAM_CHAT_ID = '-1003776230246';
+// ─────────────────────────────────────────────────────
+
+async function sendQRToTelegram(qr) {
+  const imgBuffer = await QRCode.toBuffer(qr);
+  const boundary = '----FormBoundary';
+  const body = Buffer.concat([
+    Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${TELEGRAM_CHAT_ID}\r\n`),
+    Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="photo"; filename="qr.png"\r\nContent-Type: image/png\r\n\r\n`),
+    imgBuffer,
+    Buffer.from(`\r\n--${boundary}--`)
+  ]);
+  return new Promise((resolve) => {
+    const req = https.request({
+      hostname: 'api.telegram.org',
+      path: `/bot${TELEGRAM_TOKEN}/sendPhoto`,
+      method: 'POST',
+      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}`, 'Content-Length': body.length }
+    }, resolve);
+    req.write(body);
+    req.end();
+  });
+}
 
 const schedule = [
   { from: '2025-05-01', to: '2025-05-07',  room: 'Room 1', tenant: 'New Tenant' },
@@ -57,14 +84,13 @@ async function startBot() {
   const sock = makeWASocket({ auth: state });
   sock.ev.on('creds.update', saveCreds);
   sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
-  if (qr) {
-    const QRCode = require('qrcode');
-    const qrText = await QRCode.toString(qr, { type: 'terminal', small: true });
-    console.log('\n📱 Scan this QR with WhatsApp:\n');
-    console.log(qrText);
-  }
+    if (qr) {
+      console.log('📱 Sending QR code to Telegram...');
+      await sendQRToTelegram(qr);
+      console.log('✅ QR sent to Telegram! Open Telegram and scan it.');
+    }
     if (connection === 'open') {
-      console.log('✅ Bot connected!');
+      console.log('✅ WhatsApp connected!');
       async function sendSchedule() {
         const entry = getThisWeek();
         if (!entry) return;
@@ -72,7 +98,7 @@ async function startBot() {
         const group = Object.values(groups).find(g => g.subject === GROUP_NAME);
         if (!group) { console.log('Group not found!'); return; }
         await sock.sendMessage(group.id, { text: buildMessage(entry) });
-        console.log('✅ Message sent!');
+        console.log('✅ Schedule sent to group!');
       }
       await sendSchedule();
       cron.schedule('0 9 * * 1', sendSchedule);
