@@ -1,7 +1,7 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const cron = require('node-cron');
 
-const GROUP_NAME = 'YOUR GROUP NAME HERE';
+const GROUP_NAME = '@ E7 8NN @52';
 
 const schedule = [
   { from: '2025-05-01', to: '2025-05-07',  room: 'Room 1', tenant: 'New Tenant' },
