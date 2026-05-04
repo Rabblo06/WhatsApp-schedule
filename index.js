@@ -1,24 +1,36 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, Browsers } = require('@whiskeysockets/baileys');
 const cron = require('node-cron');
 const QRCode = require('qrcode');
 const https = require('https');
 
-// ─── CONFIG ──────────────────────────────────────────
 const GROUP_NAME    = '@ E7 8NN @52';
-const TELEGRAM_TOKEN   = '8339615813:AAF05U3JWBFobzeVicgdHDTwIulHiCPlJb0';
+const TELEGRAM_TOKEN   = '8339615813:AAF05U3JWBFobzeVicgdHDTwIu1HiCP1Jb0';
 const TELEGRAM_CHAT_ID = '7502613528';
-// ─────────────────────────────────────────────────────
+
+async function sendToTelegram(text) {
+  const body = JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text });
+  return new Promise(resolve => {
+    const req = https.request({
+      hostname: 'api.telegram.org',
+      path: `/bot${TELEGRAM_TOKEN}/sendMessage`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': body.length }
+    }, resolve);
+    req.write(body);
+    req.end();
+  });
+}
 
 async function sendQRToTelegram(qr) {
   const imgBuffer = await QRCode.toBuffer(qr);
-  const boundary = '----FormBoundary';
+  const boundary = '----Boundary';
   const body = Buffer.concat([
     Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${TELEGRAM_CHAT_ID}\r\n`),
     Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="photo"; filename="qr.png"\r\nContent-Type: image/png\r\n\r\n`),
     imgBuffer,
     Buffer.from(`\r\n--${boundary}--`)
   ]);
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const req = https.request({
       hostname: 'api.telegram.org',
       path: `/bot${TELEGRAM_TOKEN}/sendPhoto`,
@@ -81,16 +93,27 @@ function buildMessage(entry) {
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState('auth');
-  const sock = makeWASocket({ auth: state });
+  const sock = makeWASocket({
+    auth: state,
+    browser: Browsers.ubuntu('Chrome'),
+    connectTimeoutMs: 60000,
+    retryRequestDelayMs: 2000,
+  });
+
   sock.ev.on('creds.update', saveCreds);
+
   sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
     if (qr) {
-      console.log('📱 Sending QR code to Telegram...');
+      console.log('📱 QR received, sending to Telegram...');
       await sendQRToTelegram(qr);
-      console.log('✅ QR sent to Telegram! Open Telegram and scan it.');
+      await sendToTelegram('📱 Scan the QR code above with WhatsApp to connect the bot!');
+      console.log('✅ QR sent to Telegram!');
     }
+
     if (connection === 'open') {
       console.log('✅ WhatsApp connected!');
+      await sendToTelegram('✅ WhatsApp bot is now connected!');
+
       async function sendSchedule() {
         const entry = getThisWeek();
         if (!entry) return;
@@ -98,13 +121,21 @@ async function startBot() {
         const group = Object.values(groups).find(g => g.subject === GROUP_NAME);
         if (!group) { console.log('Group not found!'); return; }
         await sock.sendMessage(group.id, { text: buildMessage(entry) });
-        console.log('✅ Schedule sent to group!');
+        console.log('✅ Schedule sent!');
       }
+
       await sendSchedule();
       cron.schedule('0 9 * * 1', sendSchedule);
     }
+
     if (connection === 'close') {
-      if (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut) startBot();
+      const code = lastDisconnect?.error?.output?.statusCode;
+      if (code !== DisconnectReason.loggedOut) {
+        console.log('Reconnecting...');
+        setTimeout(startBot, 3000);
+      } else {
+        await sendToTelegram('❌ Bot logged out. Redeploy to reconnect.');
+      }
     }
   });
 }
