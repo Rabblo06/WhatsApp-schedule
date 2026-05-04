@@ -1,9 +1,7 @@
 {
   "name": "cleaning-bot",
   "version": "1.0.0",
-  "scripts": {
-    "start": "node index.js"
-  },
+  "scripts": { "start": "node index.js" },
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.16",
     "node-cron": "^3.0.3"
