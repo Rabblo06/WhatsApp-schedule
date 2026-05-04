@@ -54,9 +54,15 @@ function buildMessage(entry) {
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState('auth');
-  const sock = makeWASocket({ auth: state, printQRInTerminal: true });
+  const sock = makeWASocket({ auth: state });
   sock.ev.on('creds.update', saveCreds);
-  sock.ev.on('connection.update', async ({ connection, lastDisconnect }) => {
+  sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
+  if (qr) {
+    const QRCode = require('qrcode');
+    const qrText = await QRCode.toString(qr, { type: 'terminal', small: true });
+    console.log('\n📱 Scan this QR with WhatsApp:\n');
+    console.log(qrText);
+  }
     if (connection === 'open') {
       console.log('✅ Bot connected!');
       async function sendSchedule() {
