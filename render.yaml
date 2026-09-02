@@ -1,0 +1,69 @@
+services:
+  - type: web
+    name: tom-api
+    runtime: node
+    region: frankfurt
+    plan: starter
+    branch: main
+    rootDir: apps/api
+    buildCommand: cd ../.. && corepack pnpm install --frozen-lockfile && corepack pnpm --filter "@tom/api..." build
+    startCommand: node dist/main.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: tom-redis
+          property: connectionString
+      - key: APP_URL
+        value: https://whats-app-schedule-api-rabolo.vercel.app
+      - key: ADMIN_SESSION_SECRET
+        generateValue: true
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_BUSINESS_ACCOUNT_ID
+        sync: false
+      - key: WHATSAPP_DISPLAY_PHONE_NUMBER
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_GRAPH_API_VERSION
+        value: v23.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5-mini
+      - key: DEFAULT_TIMEZONE
+        value: Europe/London
+
+  - type: worker
+    name: tom-worker
+    runtime: node
+    region: frankfurt
+    plan: starter
+    branch: main
+    rootDir: apps/worker
+    buildCommand: cd ../.. && corepack pnpm install --frozen-lockfile && corepack pnpm --filter "@tom/worker..." build
+    startCommand: node dist/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: tom-redis
+          property: connectionString
+
+  - type: redis
+    name: tom-redis
+    region: frankfurt
+    plan: starter
+    ipAllowList: []
