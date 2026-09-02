@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { prisma } from "@tom/database";
+import { prisma, type Prisma } from "@tom/database";
 import {
   formatGroupsResponse,
   listAuthorizedTomGroups,
@@ -9,11 +9,15 @@ import {
 } from "@tom/shared";
 import type { GroupListFilter } from "@tom/types";
 
+type GroupMemberWithGroup = Prisma.GroupMemberGetPayload<{
+  include: { group: true };
+}>;
+
 @Injectable()
 export class GroupsService {
   private readonly repository: GroupControlRepository = {
     async findGroupsForUser(userId: string): Promise<GroupMembershipRecord[]> {
-      const memberships = await prisma.groupMember.findMany({
+      const memberships: GroupMemberWithGroup[] = await prisma.groupMember.findMany({
         where: {
           userId,
           leftAt: null,

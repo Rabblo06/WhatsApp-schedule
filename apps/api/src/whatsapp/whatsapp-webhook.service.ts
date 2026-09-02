@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { prisma, type Prisma } from "@tom/database";
+import { prisma, toPrismaJsonValue } from "@tom/database";
 import { normalizeWhatsAppWebhook, redactSecrets } from "@tom/shared";
 
 @Injectable()
@@ -19,7 +19,7 @@ export class WhatsAppWebhookService {
         provider: "WHATSAPP_CLOUD",
         providerEventId: event.eventId,
         signatureValid: true,
-        payload: JSON.parse(JSON.stringify(redactSecrets(payload))) as Prisma.InputJsonValue,
+        payload: toPrismaJsonValue(redactSecrets(payload)),
         processedAt: new Date(),
       },
     });
