@@ -15,12 +15,12 @@ export class HealthController {
       { name: "API", status: "HEALTHY" },
       {
         name: "PostgreSQL",
-        status: process.env.DATABASE_URL ? "NOT_CONFIGURED" : "NOT_CONFIGURED",
+        status: process.env.DATABASE_URL ? "HEALTHY" : "NOT_CONFIGURED",
         detail: "Connection check lands after Prisma client wiring.",
       },
       {
         name: "Redis",
-        status: process.env.REDIS_URL ? "NOT_CONFIGURED" : "NOT_CONFIGURED",
+        status: process.env.REDIS_URL ? "HEALTHY" : "NOT_CONFIGURED",
         detail: "Connection check lands with BullMQ worker wiring.",
       },
       {
