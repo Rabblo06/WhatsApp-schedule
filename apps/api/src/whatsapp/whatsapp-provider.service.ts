@@ -22,7 +22,7 @@ export class WhatsAppProviderService implements MessagingProvider {
     const config = validateWhatsAppConfigFromEnv(process.env);
     const capabilities = getWhatsAppCapabilities();
 
-    if (!config.configured) {
+    if (config.configured === false) {
       return {
         status: "NOT_CONFIGURED",
         webhookStatus: "UNKNOWN",
