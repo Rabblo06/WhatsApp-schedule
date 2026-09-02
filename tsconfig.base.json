@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@tom/shared": ["packages/shared/src/index.ts"],
+      "@tom/types": ["packages/types/src/index.ts"],
+      "@tom/database": ["packages/database/src/index.ts"],
+      "@tom/ui": ["packages/ui/src/index.ts"]
+    }
+  }
+}
